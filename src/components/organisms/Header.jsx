@@ -9,11 +9,12 @@ import { categoryService } from "@/services/api/categoryService";
 import { useAuth } from "@/layouts/Root";
 import { useSelector } from "react-redux";
 const Header = () => {
-  const [cartItemCount, setCartItemCount] = useState(0);
+const [cartItemCount, setCartItemCount] = useState(0);
   const [categories, setCategories] = useState([]);
   const [showCategories, setShowCategories] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const auth = useAuth();
 
   useEffect(() => {
     loadCartCount();
@@ -157,7 +158,7 @@ const Header = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => useAuth().logout()}
+onClick={() => auth.logout()}
                 className="text-secondary-700 hover:text-primary-600"
               >
                 <ApperIcon name="LogOut" size={20} />
