@@ -6,11 +6,26 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const parseCategoryData = (dbCategory) => {
   if (!dbCategory) return null;
   
+  // Safely parse subcategories - handle both JSON array and comma-separated string formats
+  let subcategories = [];
+  if (dbCategory.subcategories_c) {
+    try {
+      // Try parsing as JSON first (for properly formatted JSON arrays)
+      subcategories = JSON.parse(dbCategory.subcategories_c);
+    } catch (e) {
+      // If JSON parsing fails, treat as comma-separated string
+      subcategories = dbCategory.subcategories_c
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+    }
+  }
+  
   return {
     Id: dbCategory.Id,
     name: dbCategory.name_c || '',
     image: dbCategory.image_c || '',
-    subcategories: dbCategory.subcategories_c ? JSON.parse(dbCategory.subcategories_c) : []
+    subcategories
   };
 };
 
