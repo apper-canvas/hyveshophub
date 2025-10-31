@@ -1,130 +1,478 @@
-import productsData from "@/services/mockData/products.json";
+import { getApperClient } from '@/services/apperClient';
+import { toast } from 'react-toastify';
 
-// Simulate API delay
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const parseProductData = (dbProduct) => {
+  if (!dbProduct) return null;
+  
+  return {
+    Id: dbProduct.Id,
+    name: dbProduct.name_c || '',
+    description: dbProduct.description_c || '',
+    price: parseFloat(dbProduct.price_c) || 0,
+    originalPrice: parseFloat(dbProduct.original_price_c) || 0,
+    category: dbProduct.category_c || '',
+    subcategory: dbProduct.subcategory_c || '',
+    images: dbProduct.images_c ? JSON.parse(dbProduct.images_c) : [],
+    rating: parseFloat(dbProduct.rating_c) || 0,
+    reviewCount: parseInt(dbProduct.review_count_c) || 0,
+    inStock: dbProduct.in_stock_c === true,
+    stockCount: parseInt(dbProduct.stock_count_c) || 0,
+    specifications: dbProduct.specifications_c ? JSON.parse(dbProduct.specifications_c) : {},
+    features: dbProduct.features_c ? JSON.parse(dbProduct.features_c) : []
+  };
+};
 
 export const productService = {
   async getAll() {
     await delay(300);
-    return [...productsData];
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error('ApperClient not initialized');
+      }
+
+      const response = await apperClient.fetchRecords('product_c', {
+        fields: [
+          {"field": {"Name": "name_c"}},
+          {"field": {"Name": "description_c"}},
+          {"field": {"Name": "price_c"}},
+          {"field": {"Name": "original_price_c"}},
+          {"field": {"Name": "category_c"}},
+          {"field": {"Name": "subcategory_c"}},
+          {"field": {"Name": "images_c"}},
+          {"field": {"Name": "rating_c"}},
+          {"field": {"Name": "review_count_c"}},
+          {"field": {"Name": "in_stock_c"}},
+          {"field": {"Name": "stock_count_c"}},
+          {"field": {"Name": "specifications_c"}},
+          {"field": {"Name": "features_c"}}
+        ]
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return [];
+      }
+
+      return (response.data || []).map(parseProductData);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast.error('Failed to load products');
+      return [];
+    }
   },
 
   async getById(id) {
     await delay(200);
-    const product = productsData.find(p => p.Id === parseInt(id));
-    if (!product) {
-      throw new Error("Product not found");
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error('ApperClient not initialized');
+      }
+
+      const response = await apperClient.getRecordById('product_c', parseInt(id), {
+        fields: [
+          {"field": {"Name": "name_c"}},
+          {"field": {"Name": "description_c"}},
+          {"field": {"Name": "price_c"}},
+          {"field": {"Name": "original_price_c"}},
+          {"field": {"Name": "category_c"}},
+          {"field": {"Name": "subcategory_c"}},
+          {"field": {"Name": "images_c"}},
+          {"field": {"Name": "rating_c"}},
+          {"field": {"Name": "review_count_c"}},
+          {"field": {"Name": "in_stock_c"}},
+          {"field": {"Name": "stock_count_c"}},
+          {"field": {"Name": "specifications_c"}},
+          {"field": {"Name": "features_c"}}
+        ]
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error('Product not found');
+      }
+
+      return parseProductData(response.data);
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      toast.error('Failed to load product');
+      throw error;
     }
-    return { ...product };
   },
 
   async getByCategory(category, subcategory = null) {
     await delay(350);
-    let filtered = productsData.filter(p => 
-      p.category.toLowerCase() === category.toLowerCase()
-    );
-    
-    if (subcategory) {
-      filtered = filtered.filter(p => 
-        p.subcategory.toLowerCase() === subcategory.toLowerCase()
-      );
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error('ApperClient not initialized');
+      }
+
+      const where = [{
+        FieldName: 'category_c',
+        Operator: 'EqualTo',
+        Values: [category]
+      }];
+
+      if (subcategory) {
+        where.push({
+          FieldName: 'subcategory_c',
+          Operator: 'EqualTo',
+          Values: [subcategory]
+        });
+      }
+
+      const response = await apperClient.fetchRecords('product_c', {
+        fields: [
+          {"field": {"Name": "name_c"}},
+          {"field": {"Name": "description_c"}},
+          {"field": {"Name": "price_c"}},
+          {"field": {"Name": "original_price_c"}},
+          {"field": {"Name": "category_c"}},
+          {"field": {"Name": "subcategory_c"}},
+          {"field": {"Name": "images_c"}},
+          {"field": {"Name": "rating_c"}},
+          {"field": {"Name": "review_count_c"}},
+          {"field": {"Name": "in_stock_c"}},
+          {"field": {"Name": "stock_count_c"}},
+          {"field": {"Name": "specifications_c"}},
+          {"field": {"Name": "features_c"}}
+        ],
+        where
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return [];
+      }
+
+      return (response.data || []).map(parseProductData);
+    } catch (error) {
+      console.error('Error fetching products by category:', error);
+      toast.error('Failed to load category products');
+      return [];
     }
-    
-    return filtered.map(p => ({ ...p }));
   },
 
   async search(query, filters = {}) {
     await delay(400);
-    let results = productsData.filter(p => 
-      p.name.toLowerCase().includes(query.toLowerCase()) ||
-      p.description.toLowerCase().includes(query.toLowerCase()) ||
-      p.category.toLowerCase().includes(query.toLowerCase())
-    );
-
-    // Apply filters
-    if (filters.category && filters.category !== "all") {
-      results = results.filter(p => 
-        p.category.toLowerCase() === filters.category.toLowerCase()
-      );
-    }
-
-    if (filters.minPrice !== undefined) {
-      results = results.filter(p => p.price >= filters.minPrice);
-    }
-
-    if (filters.maxPrice !== undefined) {
-      results = results.filter(p => p.price <= filters.maxPrice);
-    }
-
-    if (filters.minRating !== undefined) {
-      results = results.filter(p => p.rating >= filters.minRating);
-    }
-
-    if (filters.inStock) {
-      results = results.filter(p => p.inStock);
-    }
-
-    // Apply sorting
-    if (filters.sortBy) {
-      switch (filters.sortBy) {
-        case "price-low":
-          results.sort((a, b) => a.price - b.price);
-          break;
-        case "price-high":
-          results.sort((a, b) => b.price - a.price);
-          break;
-        case "rating":
-          results.sort((a, b) => b.rating - a.rating);
-          break;
-        case "newest":
-          results.sort((a, b) => b.Id - a.Id);
-          break;
-        case "name":
-          results.sort((a, b) => a.name.localeCompare(b.name));
-          break;
-        default:
-          break;
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error('ApperClient not initialized');
       }
-    }
 
-    return results.map(p => ({ ...p }));
+      const whereGroups = {
+        operator: 'OR',
+        subGroups: []
+      };
+
+      if (query && query.trim()) {
+        whereGroups.subGroups.push({
+          conditions: [
+            {
+              fieldName: 'name_c',
+              operator: 'Contains',
+              values: [query]
+            }
+          ],
+          operator: 'OR'
+        });
+        whereGroups.subGroups.push({
+          conditions: [
+            {
+              fieldName: 'description_c',
+              operator: 'Contains',
+              values: [query]
+            }
+          ],
+          operator: 'OR'
+        });
+      }
+
+      const where = [];
+
+      if (filters.category && filters.category !== 'all') {
+        where.push({
+          FieldName: 'category_c',
+          Operator: 'EqualTo',
+          Values: [filters.category]
+        });
+      }
+
+      if (filters.minPrice !== undefined) {
+        where.push({
+          FieldName: 'price_c',
+          Operator: 'GreaterThanOrEqualTo',
+          Values: [filters.minPrice]
+        });
+      }
+
+      if (filters.maxPrice !== undefined) {
+        where.push({
+          FieldName: 'price_c',
+          Operator: 'LessThanOrEqualTo',
+          Values: [filters.maxPrice]
+        });
+      }
+
+      if (filters.minRating !== undefined) {
+        where.push({
+          FieldName: 'rating_c',
+          Operator: 'GreaterThanOrEqualTo',
+          Values: [filters.minRating]
+        });
+      }
+
+      if (filters.inStock) {
+        where.push({
+          FieldName: 'in_stock_c',
+          Operator: 'EqualTo',
+          Values: [true]
+        });
+      }
+
+      const orderBy = [];
+      if (filters.sortBy) {
+        switch (filters.sortBy) {
+          case 'price-low':
+            orderBy.push({ fieldName: 'price_c', sorttype: 'ASC' });
+            break;
+          case 'price-high':
+            orderBy.push({ fieldName: 'price_c', sorttype: 'DESC' });
+            break;
+          case 'rating':
+            orderBy.push({ fieldName: 'rating_c', sorttype: 'DESC' });
+            break;
+          case 'newest':
+            orderBy.push({ fieldName: 'Id', sorttype: 'DESC' });
+            break;
+          case 'name':
+            orderBy.push({ fieldName: 'name_c', sorttype: 'ASC' });
+            break;
+        }
+      }
+
+      const params = {
+        fields: [
+          {"field": {"Name": "name_c"}},
+          {"field": {"Name": "description_c"}},
+          {"field": {"Name": "price_c"}},
+          {"field": {"Name": "original_price_c"}},
+          {"field": {"Name": "category_c"}},
+          {"field": {"Name": "subcategory_c"}},
+          {"field": {"Name": "images_c"}},
+          {"field": {"Name": "rating_c"}},
+          {"field": {"Name": "review_count_c"}},
+          {"field": {"Name": "in_stock_c"}},
+          {"field": {"Name": "stock_count_c"}},
+          {"field": {"Name": "specifications_c"}},
+          {"field": {"Name": "features_c"}}
+        ]
+      };
+
+      if (where.length > 0) {
+        params.where = where;
+      }
+
+      if (whereGroups.subGroups.length > 0) {
+        params.whereGroups = [whereGroups];
+      }
+
+      if (orderBy.length > 0) {
+        params.orderBy = orderBy;
+      }
+
+      const response = await apperClient.fetchRecords('product_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return [];
+      }
+
+      return (response.data || []).map(parseProductData);
+    } catch (error) {
+      console.error('Error searching products:', error);
+      toast.error('Failed to search products');
+      return [];
+    }
   },
 
   async getFeatured() {
     await delay(250);
-    // Return products with high ratings and good prices
-    const featured = productsData
-      .filter(p => p.rating >= 4.5 && p.originalPrice > p.price)
-      .slice(0, 8);
-    return featured.map(p => ({ ...p }));
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error('ApperClient not initialized');
+      }
+
+      const response = await apperClient.fetchRecords('product_c', {
+        fields: [
+          {"field": {"Name": "name_c"}},
+          {"field": {"Name": "description_c"}},
+          {"field": {"Name": "price_c"}},
+          {"field": {"Name": "original_price_c"}},
+          {"field": {"Name": "category_c"}},
+          {"field": {"Name": "subcategory_c"}},
+          {"field": {"Name": "images_c"}},
+          {"field": {"Name": "rating_c"}},
+          {"field": {"Name": "review_count_c"}},
+          {"field": {"Name": "in_stock_c"}},
+          {"field": {"Name": "stock_count_c"}},
+          {"field": {"Name": "specifications_c"}},
+          {"field": {"Name": "features_c"}}
+        ],
+        where: [
+          {
+            FieldName: 'rating_c',
+            Operator: 'GreaterThanOrEqualTo',
+            Values: [4.5]
+          }
+        ],
+        orderBy: [{ fieldName: 'rating_c', sorttype: 'DESC' }],
+        pagingInfo: { limit: 8, offset: 0 }
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return [];
+      }
+
+      const products = (response.data || []).map(parseProductData);
+      return products.filter(p => p.originalPrice > p.price);
+    } catch (error) {
+      console.error('Error fetching featured products:', error);
+      toast.error('Failed to load featured products');
+      return [];
+    }
   },
 
   async getDeals() {
     await delay(280);
-    // Return products with significant discounts
-    const deals = productsData
-      .filter(p => p.originalPrice > p.price)
-      .map(p => ({
-        ...p,
-        discount: Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)
-      }))
-      .sort((a, b) => b.discount - a.discount)
-      .slice(0, 6);
-    return deals;
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error('ApperClient not initialized');
+      }
+
+      const response = await apperClient.fetchRecords('product_c', {
+        fields: [
+          {"field": {"Name": "name_c"}},
+          {"field": {"Name": "description_c"}},
+          {"field": {"Name": "price_c"}},
+          {"field": {"Name": "original_price_c"}},
+          {"field": {"Name": "category_c"}},
+          {"field": {"Name": "subcategory_c"}},
+          {"field": {"Name": "images_c"}},
+          {"field": {"Name": "rating_c"}},
+          {"field": {"Name": "review_count_c"}},
+          {"field": {"Name": "in_stock_c"}},
+          {"field": {"Name": "stock_count_c"}},
+          {"field": {"Name": "specifications_c"}},
+          {"field": {"Name": "features_c"}}
+        ]
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return [];
+      }
+
+      const products = (response.data || []).map(parseProductData)
+        .filter(p => p.originalPrice > p.price)
+        .map(p => ({
+          ...p,
+          discount: Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)
+        }))
+        .sort((a, b) => b.discount - a.discount)
+        .slice(0, 6);
+
+      return products;
+    } catch (error) {
+      console.error('Error fetching deals:', error);
+      toast.error('Failed to load deals');
+      return [];
+    }
   },
 
   async getRelated(productId, limit = 4) {
     await delay(200);
-    const product = productsData.find(p => p.Id === parseInt(productId));
-    if (!product) return [];
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error('ApperClient not initialized');
+      }
 
-    const related = productsData
-      .filter(p => 
-        p.Id !== parseInt(productId) && 
-        (p.category === product.category || p.subcategory === product.subcategory)
-      )
-      .slice(0, limit);
-    
-    return related.map(p => ({ ...p }));
+      const product = await this.getById(productId);
+      if (!product) return [];
+
+      const whereGroups = {
+        operator: 'OR',
+        subGroups: [
+          {
+            conditions: [
+              {
+                fieldName: 'category_c',
+                operator: 'EqualTo',
+                values: [product.category]
+              }
+            ],
+            operator: 'OR'
+          },
+          {
+            conditions: [
+              {
+                fieldName: 'subcategory_c',
+                operator: 'EqualTo',
+                values: [product.subcategory]
+              }
+            ],
+            operator: 'OR'
+          }
+        ]
+      };
+
+      const response = await apperClient.fetchRecords('product_c', {
+        fields: [
+          {"field": {"Name": "name_c"}},
+          {"field": {"Name": "description_c"}},
+          {"field": {"Name": "price_c"}},
+          {"field": {"Name": "original_price_c"}},
+          {"field": {"Name": "category_c"}},
+          {"field": {"Name": "subcategory_c"}},
+          {"field": {"Name": "images_c"}},
+          {"field": {"Name": "rating_c"}},
+          {"field": {"Name": "review_count_c"}},
+          {"field": {"Name": "in_stock_c"}},
+          {"field": {"Name": "stock_count_c"}},
+          {"field": {"Name": "specifications_c"}},
+          {"field": {"Name": "features_c"}}
+        ],
+        whereGroups: [whereGroups],
+        pagingInfo: { limit: limit + 1, offset: 0 }
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        return [];
+      }
+
+      return (response.data || [])
+        .map(parseProductData)
+        .filter(p => p.Id !== parseInt(productId))
+        .slice(0, limit);
+    } catch (error) {
+      console.error('Error fetching related products:', error);
+      return [];
+    }
   }
 };

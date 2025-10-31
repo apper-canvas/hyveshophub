@@ -1,8 +1,9 @@
 import { createBrowserRouter } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import React, { Suspense, lazy } from "react";
+import { getRouteConfig } from "./route.utils";
+import Root from "@/layouts/Root";
 import Layout from "@/components/organisms/Layout";
 
-// Lazy load all page components
 const Home = lazy(() => import("@/components/pages/Home"));
 const Search = lazy(() => import("@/components/pages/Search"));
 const Category = lazy(() => import("@/components/pages/Category"));
@@ -14,6 +15,12 @@ const Orders = lazy(() => import("@/components/pages/Orders"));
 const OrderTracking = lazy(() => import("@/components/pages/OrderTracking"));
 const Deals = lazy(() => import("@/components/pages/Deals"));
 const NotFound = lazy(() => import("@/components/pages/NotFound"));
+const Login = lazy(() => import("@/components/pages/Login"));
+const Signup = lazy(() => import("@/components/pages/Signup"));
+const Callback = lazy(() => import("@/components/pages/Callback"));
+const ErrorPage = lazy(() => import("@/components/pages/ErrorPage"));
+const ResetPassword = lazy(() => import("@/components/pages/ResetPassword"));
+const PromptPassword = lazy(() => import("@/components/pages/PromptPassword"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -28,104 +35,126 @@ const PageLoader = () => (
 );
 
 // Main routes array
-const mainRoutes = [
-  {
-    path: "",
-    index: true,
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <Home />
-      </Suspense>
-    )
-  },
-  {
-    path: "search",
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <Search />
-      </Suspense>
-    )
-  },
-  {
-    path: "category/:categoryName",
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <Category />
-      </Suspense>
-    )
-  },
-  {
-    path: "product/:id",
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <ProductDetail />
-      </Suspense>
-    )
-  },
-  {
-    path: "cart",
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <Cart />
-      </Suspense>
-    )
-  },
-  {
-    path: "checkout",
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <Checkout />
-      </Suspense>
-    )
-  },
-  {
-    path: "order-confirmation/:orderId",
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <OrderConfirmation />
-      </Suspense>
-    )
-  },
-  {
-    path: "orders",
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <Orders />
-      </Suspense>
-)
-  },
-  {
-    path: "orders/track/:orderId",
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <OrderTracking />
-      </Suspense>
-    )
-  },
-  {
-    path: "deals",
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <Deals />
-      </Suspense>
-    )
-  },
-  {
-    path: "*",
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <NotFound />
-      </Suspense>
-    )
+
+const createRoute = ({
+  path,
+  index,
+  element,
+  access,
+  children,
+  ...meta
+}) => {
+  let configPath;
+  if (index) {
+    configPath = "/";
+  } else {
+    configPath = path.startsWith('/') ? path : `/${path}`;
   }
+
+  const config = getRouteConfig(configPath);
+  const finalAccess = access || config?.allow;
+
+  const route = {
+    ...(index ? { index: true } : { path }),
+    element: element ? <Suspense fallback={<PageLoader />}>{element}</Suspense> : element,
+    handle: {
+      access: finalAccess,
+      ...meta,
+    },
+  };
+
+  if (children && children.length > 0) {
+    route.children = children;
+  }
+
+  return route;
+};
+
+const authRoutes = [
+  createRoute({
+    path: "login",
+    element: <Login />
+  }),
+  createRoute({
+    path: "signup",
+    element: <Signup />
+  }),
+  createRoute({
+    path: "callback",
+    element: <Callback />
+  }),
+  createRoute({
+    path: "error",
+    element: <ErrorPage />
+  }),
+  createRoute({
+    path: "reset-password/:appId/:fields",
+    element: <ResetPassword />
+  }),
+  createRoute({
+    path: "prompt-password/:appId/:emailAddress/:provider",
+    element: <PromptPassword />
+  })
 ];
 
-// Router configuration
+const mainRoutes = [
+  createRoute({
+    index: true,
+    element: <Home />
+  }),
+  createRoute({
+    path: "search",
+    element: <Search />
+  }),
+  createRoute({
+    path: "category/:categoryName",
+    element: <Category />
+  }),
+  createRoute({
+    path: "product/:id",
+    element: <ProductDetail />
+  }),
+  createRoute({
+    path: "cart",
+    element: <Cart />
+  }),
+  createRoute({
+    path: "checkout",
+    element: <Checkout />
+  }),
+  createRoute({
+    path: "order-confirmation/:orderId",
+    element: <OrderConfirmation />
+  }),
+  createRoute({
+    path: "orders",
+    element: <Orders />
+  }),
+  createRoute({
+    path: "orders/track/:orderId",
+    element: <OrderTracking />
+  }),
+  createRoute({
+    path: "deals",
+    element: <Deals />
+  }),
+  createRoute({
+    path: "*",
+    element: <NotFound />
+  })
+];
+
 const routes = [
   {
     path: "/",
-    element: <Layout />,
-    children: [...mainRoutes]
+    element: <Root />,
+    children: [
+      ...authRoutes,
+      {
+        element: <Layout />,
+        children: [...mainRoutes]
+      }
+    ]
   }
 ];
 

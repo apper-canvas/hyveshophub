@@ -6,7 +6,8 @@ import Badge from "@/components/atoms/Badge";
 import ApperIcon from "@/components/ApperIcon";
 import { cartService } from "@/services/api/cartService";
 import { categoryService } from "@/services/api/categoryService";
-
+import { useAuth } from "@/layouts/Root";
+import { useSelector } from "react-redux";
 const Header = () => {
   const [cartItemCount, setCartItemCount] = useState(0);
   const [categories, setCategories] = useState([]);
@@ -131,7 +132,7 @@ const Header = () => {
           </div>
 
           {/* Cart and Mobile Menu */}
-          <div className="flex items-center space-x-3">
+<div className="flex items-center space-x-3">
             <Link to="/cart">
               <Button 
                 variant="ghost" 
@@ -152,6 +153,17 @@ const Header = () => {
               </Button>
             </Link>
 
+            {useSelector((state) => state.user.isAuthenticated) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => useAuth().logout()}
+                className="text-secondary-700 hover:text-primary-600"
+              >
+                <ApperIcon name="LogOut" size={20} />
+                <span className="hidden sm:inline ml-2">Logout</span>
+              </Button>
+            )}
             {/* Mobile menu button */}
             <Button
               variant="ghost"
