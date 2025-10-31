@@ -12,11 +12,34 @@ const parseProductData = (dbProduct) => {
     description: dbProduct.description_c || '',
     price: parseFloat(dbProduct.price_c) || 0,
     originalPrice: parseFloat(dbProduct.original_price_c) || 0,
-    category: dbProduct.category_c || '',
-    subcategory: dbProduct.subcategory_c || '',
-    images: dbProduct.images_c ? JSON.parse(dbProduct.images_c) : [],
-    rating: parseFloat(dbProduct.rating_c) || 0,
-    reviewCount: parseInt(dbProduct.review_count_c) || 0,
+stock: dbProduct.stock_c || 0,
+    rating: dbProduct.rating_c || 0,
+    images: (() => {
+      if (!dbProduct.images_c) return [];
+      
+      // If already an array, return as-is
+      if (Array.isArray(dbProduct.images_c)) return dbProduct.images_c;
+      
+      // Try parsing as JSON first
+      try {
+        const parsed = JSON.parse(dbProduct.images_c);
+        return Array.isArray(parsed) ? parsed : [parsed];
+      } catch (e) {
+        // If JSON parse fails, treat as comma-separated string or single URL
+        const urlString = String(dbProduct.images_c).trim();
+        if (!urlString) return [];
+        
+        // Check if it contains commas (multiple URLs)
+        if (urlString.includes(',')) {
+          return urlString.split(',').map(url => url.trim()).filter(url => url.length > 0);
+        }
+        
+        // Single URL string
+        return [urlString];
+      }
+    })(),
+    reviewCount: dbProduct.review_count_c || 0,
+    category: dbProduct.category_c,
     inStock: dbProduct.in_stock_c === true,
     stockCount: parseInt(dbProduct.stock_count_c) || 0,
     specifications: dbProduct.specifications_c ? JSON.parse(dbProduct.specifications_c) : {},
