@@ -11,6 +11,7 @@ const Cart = lazy(() => import("@/components/pages/Cart"));
 const Checkout = lazy(() => import("@/components/pages/Checkout"));
 const OrderConfirmation = lazy(() => import("@/components/pages/OrderConfirmation"));
 const Orders = lazy(() => import("@/components/pages/Orders"));
+const OrderTracking = lazy(() => import("@/components/pages/OrderTracking"));
 const Deals = lazy(() => import("@/components/pages/Deals"));
 const NotFound = lazy(() => import("@/components/pages/NotFound"));
 
@@ -90,6 +91,14 @@ const mainRoutes = [
     element: (
       <Suspense fallback={<PageLoader />}>
         <Orders />
+      </Suspense>
+)
+  },
+  {
+    path: "orders/track/:orderId",
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <OrderTracking />
       </Suspense>
     )
   },

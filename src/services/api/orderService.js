@@ -66,7 +66,74 @@ export const orderService = {
       saveOrdersToStorage(orders);
       return { ...orders[orderIndex] };
     }
+throw new Error("Order not found");
+  },
+
+  async getTrackingInfo(id) {
+    await delay(300);
+    const orders = getOrdersFromStorage();
+    const order = orders.find(o => o.Id === parseInt(id));
     
-    throw new Error("Order not found");
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
+    const carriers = ['FedEx', 'UPS', 'USPS'];
+    const carrier = carriers[order.Id % carriers.length];
+    const trackingNumber = `${carrier.substring(0, 2).toUpperCase()}${Math.random().toString().substring(2, 14)}`;
+
+    const orderDate = new Date(order.date);
+    const statusDays = {
+      confirmed: 0,
+      processing: 1,
+      shipped: 2,
+      'out-for-delivery': 4,
+      delivered: 5
+    };
+
+    const currentStatusDay = statusDays[order.status] || 0;
+    const estimatedDeliveryDays = order.status === 'delivered' ? currentStatusDay : 5;
+    const estimatedDelivery = new Date(orderDate);
+    estimatedDelivery.setDate(estimatedDelivery.getDate() + estimatedDeliveryDays);
+
+    const events = [];
+    const statusProgression = [
+      { status: 'confirmed', description: 'Order confirmed and payment received', location: null },
+      { status: 'processing', description: 'Order is being prepared for shipment', location: 'Warehouse - Processing Center' },
+      { status: 'shipped', description: 'Package has been shipped', location: 'Distribution Center' },
+      { status: 'out-for-delivery', description: 'Out for delivery', location: `${order.shippingAddress.city}, ${order.shippingAddress.state}` }
+    ];
+
+    if (order.status === 'delivered') {
+      statusProgression.push({
+        status: 'delivered',
+        description: 'Package delivered successfully',
+        location: order.shippingAddress.address
+      });
+    }
+
+    const currentStatusIndex = statusProgression.findIndex(s => s.status === order.status);
+    const eventsToShow = currentStatusIndex >= 0 ? statusProgression.slice(0, currentStatusIndex + 1) : statusProgression.slice(0, 1);
+
+    eventsToShow.reverse().forEach((statusEvent, index) => {
+      const eventDate = new Date(orderDate);
+      const daysToAdd = statusDays[statusEvent.status] || 0;
+      eventDate.setDate(eventDate.getDate() + daysToAdd);
+      eventDate.setHours(9 + (index * 3), Math.floor(Math.random() * 60), 0, 0);
+
+      events.push({
+        status: statusEvent.status,
+        description: statusEvent.description,
+        location: statusEvent.location,
+        timestamp: eventDate.toISOString()
+      });
+    });
+
+    return {
+      carrier,
+      trackingNumber,
+      estimatedDelivery: estimatedDelivery.toISOString(),
+      events
+    };
   }
 };

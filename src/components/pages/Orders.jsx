@@ -189,16 +189,18 @@ const Orders = () => {
                     </div>
                     
                     <div className="flex items-center space-x-3">
-                      <Link to={`/order-confirmation/${order.Id}`}>
+<Link to={`/order-confirmation/${order.Id}`}>
                         <Button variant="outline" size="sm" icon="Eye">
                           View Details
                         </Button>
                       </Link>
                       
                       {order.status !== "cancelled" && order.status !== "delivered" && (
-                        <Button variant="ghost" size="sm" icon="MapPin">
-                          Track Package
-                        </Button>
+                        <Link to={`/orders/track/${order.Id}`}>
+                          <Button variant="ghost" size="sm" icon="MapPin">
+                            Track Package
+                          </Button>
+                        </Link>
                       )}
                       
                       {order.status === "delivered" && (
