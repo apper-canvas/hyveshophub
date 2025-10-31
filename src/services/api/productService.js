@@ -1,5 +1,7 @@
-import { getApperClient } from '@/services/apperClient';
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
+import React from "react";
+import { getApperClient } from "@/services/apperClient";
+import Error from "@/components/ui/Error";
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -10,9 +12,9 @@ const parseProductData = (dbProduct) => {
     Id: dbProduct.Id,
     name: dbProduct.name_c || '',
     description: dbProduct.description_c || '',
-    price: parseFloat(dbProduct.price_c) || 0,
+price: parseFloat(dbProduct.price_c) || 0,
     originalPrice: parseFloat(dbProduct.original_price_c) || 0,
-stock: dbProduct.stock_c || 0,
+    stock: dbProduct.stock_c || 0,
     rating: dbProduct.rating_c || 0,
     images: (() => {
       if (!dbProduct.images_c) return [];
@@ -38,12 +40,11 @@ stock: dbProduct.stock_c || 0,
         return [urlString];
       }
     })(),
-    reviewCount: dbProduct.review_count_c || 0,
+reviewCount: dbProduct.review_count_c || 0,
     category: dbProduct.category_c,
-    inStock: dbProduct.in_stock_c === true,
-    stockCount: parseInt(dbProduct.stock_count_c) || 0,
-    specifications: dbProduct.specifications_c ? JSON.parse(dbProduct.specifications_c) : {},
-    features: dbProduct.features_c ? JSON.parse(dbProduct.features_c) : []
+    discount: dbProduct.discount_c || 0,
+    inStock: dbProduct.in_stock_c !== false,
+    features: dbProduct.features_c ? dbProduct.features_c.split(',').map(f => f.trim()).filter(f => f) : []
   };
 };
 
@@ -495,7 +496,7 @@ export const productService = {
         .slice(0, limit);
     } catch (error) {
       console.error('Error fetching related products:', error);
-      return [];
+return [];
     }
   }
 };
