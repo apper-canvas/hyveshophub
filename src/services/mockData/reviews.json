@@ -1,0 +1,62 @@
+[
+  {
+    "Id": 1,
+    "productId": "1",
+    "userName": "John D.",
+    "rating": 5,
+    "title": "Amazing phone, worth every penny!",
+    "comment": "The camera quality is incredible and the battery lasts all day. The titanium design feels premium and the performance is lightning fast.",
+    "date": "2024-01-15",
+    "helpful": 24
+  },
+  {
+    "Id": 2,
+    "productId": "1",
+    "userName": "Sarah M.",
+    "rating": 4,
+    "title": "Great upgrade from my old phone",
+    "comment": "Love the new features and the camera improvements. Only downside is the price, but the quality justifies it.",
+    "date": "2024-01-10",
+    "helpful": 18
+  },
+  {
+    "Id": 3,
+    "productId": "2",
+    "userName": "Mike R.",
+    "rating": 5,
+    "title": "Best TV I've ever owned",
+    "comment": "The picture quality is stunning and the smart features work flawlessly. Perfect for gaming and movies.",
+    "date": "2024-01-12",
+    "helpful": 31
+  },
+  {
+    "Id": 4,
+    "productId": "3",
+    "userName": "Emily K.",
+    "rating": 5,
+    "title": "Excellent noise cancellation",
+    "comment": "These headphones are perfect for work and travel. The noise cancellation is industry-leading and the sound quality is exceptional.",
+    "date": "2024-01-08",
+    "helpful": 42
+  },
+  {
+    "Id": 5,
+    "productId": "4",
+    "userName": "David L.",
+    "rating": 4,
+    "title": "Comfortable and stylish",
+    "comment": "Great running shoes with excellent cushioning. They look good and perform well for both running and casual wear.",
+    "date": "2024-01-05",
+    "helpful": 15
+  },
+  {
+    "Id": 6,
+    "productId": "5",
+    "userName": "Lisa W.",
+    "rating": 5,
+    "title": "Perfect laptop for students",
+    "comment": "Fast, lightweight, and great battery life. The M2 chip handles everything I throw at it with ease.",
+    "date": "2024-01-14",
+    "helpful": 28
+  }
+]
